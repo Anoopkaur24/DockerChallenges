@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Node.js Service
+  node-service:
+    build:
+      context: ./docker/api
+      dockerfile: Dockerfile
+    image: challenge3-node-service
+    container_name: challenge3-node-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - challenge-network
+
+  # Database Service
+  db:
+    image: mariadb:latest
+    container_name: challenge3-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: challenge3db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./docker/db/init:/docker-entrypoint-initdb.d
+    networks:
+      - challenge-network
+
+  # Nginx Service
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    image: challenge3-nginx
+    container_name: challenge3-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - node-service
+    networks:
+      - challenge-network
+
+networks:
+  challenge-network:
+    driver: bridge
+
+volumes:
+  db-data:
